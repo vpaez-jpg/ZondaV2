@@ -13,7 +13,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function PrimerLoginPage() {
   const router = useRouter()
-  const supabase = createClient()
 
   const [nueva, setNueva] = useState('')
   const [confirmar, setConfirmar] = useState('')
@@ -34,6 +33,7 @@ export default function PrimerLoginPage() {
     }
 
     setLoading(true)
+    const supabase = createClient()
 
     const { error: authError } = await supabase.auth.updateUser({ password: nueva })
     if (authError) {
