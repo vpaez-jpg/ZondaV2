@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient }         from '@/lib/supabase/client'
-import { useRouter }            from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 
 interface InfoCaso {
   casoId:        string
@@ -14,8 +14,10 @@ interface InfoCaso {
   yaRegistrado:  boolean
 }
 
-export default function InvitacionPage({ params }: { params: { token: string } }) {
+export default function InvitacionPage() {
   const router   = useRouter()
+  const rawParams = useParams()
+  const token    = rawParams.token as string
   const supabase = createClient()
 
   const [info,       setInfo]       = useState<InfoCaso | null>(null)
@@ -30,7 +32,7 @@ export default function InvitacionPage({ params }: { params: { token: string } }
 
   // Cargar info del caso por token
   useEffect(() => {
-    fetch(`/api/invitacion/${params.token}`)
+    fetch(`/api/invitacion/${token}`)
       .then(r => r.json())
       .then(data => {
         if (data.error) { setError('Este link de invitación no es válido o ya expiró.'); return }
@@ -40,11 +42,11 @@ export default function InvitacionPage({ params }: { params: { token: string } }
       })
       .catch(() => setError('Error cargando la invitación.'))
       .finally(() => setCargando(false))
-  }, [params.token])
+  }, [token])
 
   // Después de auth, vincular el caso y redirigir al portal
   async function vincularYRedirigir(userId: string) {
-    await fetch(`/api/invitacion/${params.token}`, {
+    await fetch(`/api/invitacion/${token}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),

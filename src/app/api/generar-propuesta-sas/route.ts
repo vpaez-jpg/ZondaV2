@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
   try {
     if (formato === 'docx') {
       const buf = await generarDocxPropuesta(honorarios, partnerNombre)
-      return new NextResponse(buf, {
+      return new NextResponse(new Uint8Array(buf), {
         status: 200,
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
 
     // PDF (default)
     const buf = await generarPdfPropuesta(honorarios, partnerNombre)
-    return new NextResponse(buf, {
+    return new NextResponse(new Uint8Array(buf), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
