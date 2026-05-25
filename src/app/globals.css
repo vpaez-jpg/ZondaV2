@@ -1,26 +1,215 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* ── Zonda Legal — Premium Monochrome Theme ───────────────────────
+   Inspirado en interfaces legales de alto nivel (Harvey AI, Linear).
+   Paleta: fondo gris frío, superficies blancas, tipografía oscura.
+   Sin colores de acento vivos — el color es semántico, no decorativo.
+──────────────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Superficies */
+  --background:          oklch(0.945 0.004 240);   /* gris frío — fondo principal */
+  --foreground:          oklch(0.13  0.006 250);   /* casi negro con tinte frío */
+
+  --card:                oklch(1    0     0);       /* blanco puro */
+  --card-foreground:     oklch(0.13  0.006 250);
+
+  --popover:             oklch(1    0     0);
+  --popover-foreground:  oklch(0.13  0.006 250);
+
+  /* Acciones primarias — negro */
+  --primary:             oklch(0.13  0.006 250);
+  --primary-foreground:  oklch(0.99  0     0);
+
+  /* Secundario */
+  --secondary:           oklch(0.96  0.004 240);
+  --secondary-foreground: oklch(0.25 0.006 250);
+
+  /* Muted — para fondos de inputs, etiquetas, placeholders */
+  --muted:               oklch(0.955 0.004 240);
+  --muted-foreground:    oklch(0.52  0.007 250);
+
+  /* Accent */
+  --accent:              oklch(0.955 0.004 240);
+  --accent-foreground:   oklch(0.20  0.006 250);
+
+  /* Destructivo */
+  --destructive:         oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  /* Bordes e inputs */
+  --border:              oklch(0.895 0.006 240);   /* gris frío sutil */
+  --input:               oklch(0.895 0.006 240);
+
+  /* Ring de foco */
+  --ring:                oklch(0.45  0.006 250);
+
+  /* Radio — ligeramente más cuadrado, más profesional */
+  --radius: 0.5rem;
+
+  /* Charts — escala de grises */
+  --chart-1: oklch(0.20 0 0);
+  --chart-2: oklch(0.40 0 0);
+  --chart-3: oklch(0.55 0 0);
+  --chart-4: oklch(0.70 0 0);
+  --chart-5: oklch(0.85 0 0);
+
+  /* Sidebar */
+  --sidebar:                    oklch(0.97 0.003 240);
+  --sidebar-foreground:         oklch(0.13 0.006 250);
+  --sidebar-primary:            oklch(0.13 0.006 250);
+  --sidebar-primary-foreground: oklch(0.99 0     0);
+  --sidebar-accent:             oklch(0.93 0.004 240);
+  --sidebar-accent-foreground:  oklch(0.20 0.006 250);
+  --sidebar-border:             oklch(0.895 0.006 240);
+  --sidebar-ring:               oklch(0.45  0.006 250);
 }
 
+/* ── Mapeo de variables a utilidades Tailwind v4 ──────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background:             var(--background);
+  --color-foreground:             var(--foreground);
+  --color-card:                   var(--card);
+  --color-card-foreground:        var(--card-foreground);
+  --color-popover:                var(--popover);
+  --color-popover-foreground:     var(--popover-foreground);
+  --color-primary:                var(--primary);
+  --color-primary-foreground:     var(--primary-foreground);
+  --color-secondary:              var(--secondary);
+  --color-secondary-foreground:   var(--secondary-foreground);
+  --color-muted:                  var(--muted);
+  --color-muted-foreground:       var(--muted-foreground);
+  --color-accent:                 var(--accent);
+  --color-accent-foreground:      var(--accent-foreground);
+  --color-destructive:            var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border:                 var(--border);
+  --color-input:                  var(--input);
+  --color-ring:                   var(--ring);
+  --radius-sm:  calc(var(--radius) - 2px);
+  --radius-md:  var(--radius);
+  --radius-lg:  calc(var(--radius) + 2px);
+  --radius-xl:  calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --color-sidebar-ring:                  var(--sidebar-ring);
+  --color-sidebar-border:                var(--sidebar-border);
+  --color-sidebar-accent-foreground:     var(--sidebar-accent-foreground);
+  --color-sidebar-accent:                var(--sidebar-accent);
+  --color-sidebar-primary-foreground:    var(--sidebar-primary-foreground);
+  --color-sidebar-primary:               var(--sidebar-primary);
+  --color-sidebar-foreground:            var(--sidebar-foreground);
+  --color-sidebar:                       var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Base ──────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ── Cards con sombra premium ─────────────────────────────────── */
+/* Sombra sutil igual a la del screenshot: capas pequeñas, no difusas */
+[data-slot="card"],
+.card-shadow {
+  box-shadow:
+    0 1px 2px oklch(0 0 0 / 0.04),
+    0 2px 6px oklch(0 0 0 / 0.05),
+    0 0 0 1px oklch(0 0 0 / 0.04);
+  border: none !important;   /* la sombra hace de borde */
+}
+
+/* ── Badges de estado semántico (funcional, no decorativo) ─────── */
+/* Se usan como clases utilitarias en los componentes */
+.badge-pendiente {
+  background: oklch(0.97 0.015 80);
+  color:      oklch(0.40 0.08  80);
+  border:     1px solid oklch(0.91 0.025 80);
+}
+.badge-cobrado {
+  background: oklch(0.97 0.012 155);
+  color:      oklch(0.38 0.08  155);
+  border:     1px solid oklch(0.91 0.022 155);
+}
+.badge-parcial {
+  background: oklch(0.96 0.010 240);
+  color:      oklch(0.38 0.07  240);
+  border:     1px solid oklch(0.89 0.018 240);
+}
+.badge-cancelado {
+  background: oklch(0.96 0 0);
+  color:      oklch(0.52 0 0);
+  border:     1px solid oklch(0.89 0 0);
+}
+
+/* ── Scrollbar refinada ───────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: oklch(0.82 0.004 240); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: oklch(0.70 0.005 240); }
+
+/* ── Dark mode ────────────────────────────────────────────────── */
+.dark {
+  --background:          oklch(0.13 0.006 250);
+  --foreground:          oklch(0.97 0     0);
+  --card:                oklch(0.18 0.006 250);
+  --card-foreground:     oklch(0.97 0     0);
+  --popover:             oklch(0.18 0.006 250);
+  --popover-foreground:  oklch(0.97 0     0);
+  --primary:             oklch(0.92 0     0);
+  --primary-foreground:  oklch(0.18 0.006 250);
+  --secondary:           oklch(0.24 0.006 250);
+  --secondary-foreground: oklch(0.97 0     0);
+  --muted:               oklch(0.24 0.006 250);
+  --muted-foreground:    oklch(0.62 0.005 250);
+  --accent:              oklch(0.24 0.006 250);
+  --accent-foreground:   oklch(0.97 0     0);
+  --destructive:         oklch(0.70 0.191 22.216);
+  --border:              oklch(1    0     0 / 9%);
+  --input:               oklch(1    0     0 / 12%);
+  --ring:                oklch(0.55 0.005 250);
+  --chart-1: oklch(0.85 0 0);
+  --chart-2: oklch(0.65 0 0);
+  --chart-3: oklch(0.48 0 0);
+  --chart-4: oklch(0.35 0 0);
+  --chart-5: oklch(0.25 0 0);
+  --sidebar:                    oklch(0.18 0.006 250);
+  --sidebar-foreground:         oklch(0.97 0     0);
+  --sidebar-primary:            oklch(0.92 0     0);
+  --sidebar-primary-foreground: oklch(0.18 0.006 250);
+  --sidebar-accent:             oklch(0.24 0.006 250);
+  --sidebar-accent-foreground:  oklch(0.97 0     0);
+  --sidebar-border:             oklch(1    0     0 / 9%);
+  --sidebar-ring:               oklch(0.55 0.005 250);
 }
