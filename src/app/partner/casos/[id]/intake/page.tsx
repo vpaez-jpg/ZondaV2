@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // Página de respuestas de intake del caso
 // /partner/casos/[id]/intake
 

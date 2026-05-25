@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // Página raíz: detecta el rol del usuario y redirige al portal correcto.
 // El middleware ya maneja la mayoría de las redirecciones,
 // pero este archivo cubre el caso de la ruta exacta "/".
