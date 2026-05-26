@@ -2455,10 +2455,14 @@ function GenerarDocumentosAmparo({ tramiteId, tipo, datos, datosPropuesta }: {
   const [jurisdiccion, setJurisdiccion] = useState<'san_rafael' | 'mendoza' | ''>(
     (datosPropuesta.jurisdiccion as 'san_rafael' | 'mendoza' | undefined) ?? ''
   )
-  const [guardando,  setGuardando]  = useState(false)
-  const [guardado,   setGuardado]   = useState(!!datosPropuesta.jurisdiccion)
-  const [generando,  setGenerando]  = useState(false)
-  const [error,      setError]      = useState('')
+  const [guardando,        setGuardando]        = useState(false)
+  const [guardado,         setGuardado]         = useState(!!datosPropuesta.jurisdiccion)
+  const [generando,        setGenerando]        = useState(false)
+  const [generandoAnexo,   setGenerandoAnexo]   = useState(false)
+  const [generandoForm,    setGenerandoForm]    = useState(false)
+  const [enviandoCorreo,   setEnviandoCorreo]   = useState(false)
+  const [correoEnviado,    setCorreoEnviado]    = useState(false)
+  const [error,            setError]            = useState('')
 
   async function guardarJurisdiccion() {
     if (!jurisdiccion) return
@@ -2471,6 +2475,7 @@ function GenerarDocumentosAmparo({ tramiteId, tipo, datos, datosPropuesta }: {
         .eq('id', tramiteId)
       if (err) { setError(err.message); return }
       setGuardado(true)
+      setCorreoEnviado(false)
     } catch (e) {
       setError(String(e))
     } finally {
@@ -2503,6 +2508,76 @@ function GenerarDocumentosAmparo({ tramiteId, tipo, datos, datosPropuesta }: {
     }
   }
 
+  async function descargarAnexoBonos() {
+    setGenerandoAnexo(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/generar-anexo-bonos?tramiteId=${tramiteId}`)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error || 'Error al generar el Anexo I.')
+        return
+      }
+      const blob = await res.blob()
+      const href = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href     = href
+      a.download = `Anexo_I_Bonos_${tramiteId.slice(0, 8)}.pdf`
+      a.click()
+      URL.revokeObjectURL(href)
+    } catch (e) {
+      setError(String(e))
+    } finally {
+      setGenerandoAnexo(false)
+    }
+  }
+
+  async function descargarFormularioDemanda() {
+    setGenerandoForm(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/generar-formulario-demanda?tramiteId=${tramiteId}`)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error || 'Error al generar el formulario.')
+        return
+      }
+      const blob = await res.blob()
+      const href = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href     = href
+      a.download = `Formulario_Demanda_${tramiteId.slice(0, 8)}.pdf`
+      a.click()
+      URL.revokeObjectURL(href)
+    } catch (e) {
+      setError(String(e))
+    } finally {
+      setGenerandoForm(false)
+    }
+  }
+
+  async function enviarCorreoApertura() {
+    setEnviandoCorreo(true)
+    setError('')
+    try {
+      const res = await fetch('/api/enviar-correo-apertura', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ tramiteId }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(data.error || 'Error al enviar el correo.')
+        return
+      }
+      setCorreoEnviado(true)
+    } catch (e) {
+      setError(String(e))
+    } finally {
+      setEnviandoCorreo(false)
+    }
+  }
+
   const precioCliente = datosPropuesta.precio_cliente as number | undefined
   const incluyePct    = datosPropuesta.incluye_porcentaje === true
 
@@ -2510,6 +2585,19 @@ function GenerarDocumentosAmparo({ tramiteId, tipo, datos, datosPropuesta }: {
     if (typeof n !== 'number') return '—'
     return '$ ' + Math.round(n).toLocaleString('es-AR')
   }
+
+  const spinnerSvg = (
+    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+    </svg>
+  )
+
+  const downloadIcon = (
+    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+    </svg>
+  )
 
   return (
     <div className="space-y-4">
@@ -2558,13 +2646,11 @@ function GenerarDocumentosAmparo({ tramiteId, tipo, datos, datosPropuesta }: {
         </button>
       </div>
 
-      {/* Botón de generación */}
+      {/* Escrito de inicio de amparo */}
       <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col gap-2">
         <div>
           <p className="text-xs font-semibold text-slate-700">Escrito de inicio de amparo</p>
-          <p className="text-xs text-slate-400 mt-0.5">
-            DOCX listo para presentar en el juzgado federal correspondiente
-          </p>
+          <p className="text-xs text-slate-400 mt-0.5">DOCX listo para presentar en el juzgado federal</p>
         </div>
         <button
           type="button"
@@ -2572,17 +2658,93 @@ function GenerarDocumentosAmparo({ tramiteId, tipo, datos, datosPropuesta }: {
           onClick={descargar}
           className="mt-auto flex items-center justify-center gap-2 bg-foreground hover:bg-foreground/90 disabled:bg-foreground/40 text-primary-foreground text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
         >
-          {generando ? (
-            <><svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Generando...</>
-          ) : (
-            <><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Descargar escrito (DOCX)</>
-          )}
+          {generando ? <>{spinnerSvg}Generando...</> : <>{downloadIcon}Descargar escrito (DOCX)</>}
         </button>
         {!guardado && !generando && (
           <p className="text-xs text-amber-600">Primero confirmá la jurisdicción para habilitar la descarga.</p>
         )}
-        {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
+
+      {/* Anexo I — Bonos de sueldo */}
+      <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col gap-2">
+        <div>
+          <p className="text-xs font-semibold text-slate-700">Anexo I — Bonos de sueldo</p>
+          <p className="text-xs text-slate-400 mt-0.5">PDF unificado con portada y todos los bonos adjuntos</p>
+        </div>
+        <button
+          type="button"
+          disabled={!guardado || generandoAnexo}
+          onClick={descargarAnexoBonos}
+          className="mt-auto flex items-center justify-center gap-2 bg-foreground hover:bg-foreground/90 disabled:bg-foreground/40 text-primary-foreground text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+        >
+          {generandoAnexo ? <>{spinnerSvg}Generando...</> : <>{downloadIcon}Unificar bonos (PDF)</>}
+        </button>
+        {!guardado && !generandoAnexo && (
+          <p className="text-xs text-amber-600">Primero confirmá la jurisdicción para habilitar la descarga.</p>
+        )}
+      </div>
+
+      {/* Formulario de ingreso de demandas */}
+      <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col gap-2">
+        <div>
+          <p className="text-xs font-semibold text-slate-700">Formulario de ingreso de demandas</p>
+          <p className="text-xs text-slate-400 mt-0.5">Formulario judicial pre-completado con los datos del cliente</p>
+        </div>
+        <button
+          type="button"
+          disabled={!guardado || generandoForm}
+          onClick={descargarFormularioDemanda}
+          className="mt-auto flex items-center justify-center gap-2 bg-foreground hover:bg-foreground/90 disabled:bg-foreground/40 text-primary-foreground text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+        >
+          {generandoForm ? <>{spinnerSvg}Generando...</> : <>{downloadIcon}Formulario demanda (PDF)</>}
+        </button>
+        {!guardado && !generandoForm && (
+          <p className="text-xs text-amber-600">Primero confirmá la jurisdicción para habilitar la descarga.</p>
+        )}
+      </div>
+
+      {/* Correo apertura de causa */}
+      <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col gap-2">
+        <div>
+          <p className="text-xs font-semibold text-slate-700">Correo apertura de causa</p>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Envía la solicitud de apertura de expediente al juzgado{' '}
+            {jurisdiccion === 'san_rafael' ? 'Federal de San Rafael' : jurisdiccion === 'mendoza' ? 'Federal N° 4 de Mendoza' : 'correspondiente'}
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={!guardado || enviandoCorreo || correoEnviado}
+          onClick={enviarCorreoApertura}
+          className="mt-auto flex items-center justify-center gap-2 bg-foreground hover:bg-foreground/90 disabled:bg-foreground/40 text-primary-foreground text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+        >
+          {enviandoCorreo ? (
+            <>{spinnerSvg}Enviando...</>
+          ) : correoEnviado ? (
+            <>
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+              </svg>
+              Correo enviado
+            </>
+          ) : (
+            <>
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+              Enviar correo apertura de causa
+            </>
+          )}
+        </button>
+        {!guardado && !enviandoCorreo && (
+          <p className="text-xs text-amber-600">Primero confirmá la jurisdicción para habilitar el envío.</p>
+        )}
+        {correoEnviado && (
+          <p className="text-xs text-emerald-600">✓ Correo enviado al juzgado. Podés reenviar cambiando la jurisdicción.</p>
+        )}
+      </div>
+
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   )
 }
